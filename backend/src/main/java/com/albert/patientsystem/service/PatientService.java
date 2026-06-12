@@ -3,12 +3,14 @@ package com.albert.patientsystem.service;
 import com.albert.patientsystem.dto.PatientRequest;
 import com.albert.patientsystem.entity.Patient;
 import com.albert.patientsystem.repository.PatientRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
+
 import java.util.List;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.Pageable;
 
 
 @Service
@@ -36,6 +38,10 @@ public class PatientService {
 
     public Patient update(Long id, PatientRequest req) {
         Patient p = getById(id);
+        if (repo.existsByPatientIdAndIdNot(req.getPatientId(), id))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "patientId already exists");
+        if (repo.existsByPassportNumberAndIdNot(req.getPassportNumber(), id))
+            throw new ResponseStatusException(HttpStatus.CONFLICT, "passportNumber already exists");
         apply(req, p);
         return repo.save(p);
     }
@@ -47,6 +53,15 @@ public class PatientService {
     }
     public Page<Patient> search(String q, Pageable pageable) {
         return repo.search(q, pageable);
+    }
+
+    /**
+     * Returns up to {@code limit} patients ordered by name, for the
+     * diagnose-form dropdown. Callers should over-fetch by one (e.g. ask
+     * for cap+1) so they can detect truncation.
+     */
+    public List<Patient> findOptions(int limit) {
+        return repo.findAllOrderedByName(PageRequest.of(0, limit));
     }
     private void apply(PatientRequest req, Patient p) {
         p.setPatientId(req.getPatientId());

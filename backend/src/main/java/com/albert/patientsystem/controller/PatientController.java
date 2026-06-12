@@ -1,22 +1,32 @@
 package com.albert.patientsystem.controller;
 
+import com.albert.patientsystem.dto.PatientOption;
 import com.albert.patientsystem.dto.PatientRequest;
 import com.albert.patientsystem.entity.Patient;
 import com.albert.patientsystem.service.PatientService;
 import jakarta.validation.Valid;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.*;
-import java.util.List;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
 
 
 @RestController
 @RequestMapping("/api/patients")
 public class PatientController {
+
+    /** Hard cap on the /options endpoint so a 50k-patient DB doesn't ship its
+     *  whole table down to the diagnose form. The frontend shows a warning if
+     *  the result is truncated. */
+    static final int OPTIONS_MAX = 10_000;
 
     private final PatientService service;
     public PatientController(PatientService service) { this.service = service; }
@@ -33,6 +43,26 @@ public class PatientController {
             @RequestParam(defaultValue = "id") String sortBy) {
         Pageable pageable = PageRequest.of(page, size, Sort.by(sortBy));
         return service.search(q, pageable);
+    }
+
+    /**
+     * Slim, unpaginated listing for the diagnose dropdown. Capped at
+     * {@link #OPTIONS_MAX}; the response body indicates whether truncation
+     * occurred so the UI can surface a warning.
+     */
+    @GetMapping("/options")
+    public Map<String, Object> options() {
+        List<Patient> page = service.findOptions(OPTIONS_MAX + 1);
+        boolean truncated = page.size() > OPTIONS_MAX;
+        List<Patient> trimmed = truncated ? page.subList(0, OPTIONS_MAX) : page;
+        List<PatientOption> options = trimmed.stream()
+                .map(p -> new PatientOption(p.getId(), p.getPatientId(), p.getFullName()))
+                .collect(Collectors.toList());
+        Map<String, Object> body = new LinkedHashMap<>();
+        body.put("options", options);
+        body.put("truncated", truncated);
+        body.put("cap", OPTIONS_MAX);
+        return body;
     }
 
 

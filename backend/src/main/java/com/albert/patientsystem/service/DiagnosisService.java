@@ -1,8 +1,10 @@
 package com.albert.patientsystem.service;
 
 import com.albert.patientsystem.dto.DiagnosisResult;
+import com.albert.patientsystem.entity.BinaryLabel;
 import com.albert.patientsystem.entity.DiagnosticRecord;
 import com.albert.patientsystem.entity.Patient;
+import com.albert.patientsystem.entity.SubtypeLabel;
 import com.albert.patientsystem.repository.DiagnosticRecordRepository;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
@@ -15,6 +17,7 @@ import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 import org.springframework.http.client.SimpleClientHttpRequestFactory;
 import java.io.IOException;
+import java.time.Duration;
 import java.time.LocalDate;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -31,9 +34,14 @@ public class DiagnosisService {
                             @Value("${ml.service.url}") String mlUrl) {
         this.patientService = patientService;
         this.recordRepo = recordRepo;
+        // FastAPI inference is light, but a hung / black-holed port should not block
+        // the diagnose endpoint indefinitely. 5s connect, 60s read is generous.
+        SimpleClientHttpRequestFactory rf = new SimpleClientHttpRequestFactory();
+        rf.setConnectTimeout(Duration.ofSeconds(5));
+        rf.setReadTimeout(Duration.ofSeconds(60));
         this.rest = RestClient.builder()
                 .baseUrl(mlUrl)
-                .requestFactory(new SimpleClientHttpRequestFactory())  // HTTP/1.1 only — no upgrade attempt
+                .requestFactory(rf)  // HTTP/1.1 only — no upgrade attempt
                 .build();
     }
 
@@ -63,10 +71,10 @@ public class DiagnosisService {
         rec.setPatient(patient);
         rec.setTestDate(testDate != null ? testDate : LocalDate.now());
         rec.setImageFilename(image.getOriginalFilename());
-        rec.setBinaryLabel(result.binary.label);
+        rec.setBinaryLabel(BinaryLabel.fromWire(result.binary.label));
         rec.setBinaryProbability(result.binary.probabilityMalignant);
-        if (result.subtype != null) {
-            rec.setSubtypeLabel(result.subtype.label);
+        if (result.subtype != null && result.subtype.label != null) {
+            rec.setSubtypeLabel(SubtypeLabel.fromWire(result.subtype.label));
             rec.setSubtypeConfidence(result.subtype.confidence);
         }
         return recordRepo.save(rec);

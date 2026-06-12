@@ -16,8 +16,9 @@ public class Patient {
     @Column(nullable = false)
     private String fullName;
 
+    @Enumerated(EnumType.STRING)
     @Column(nullable = false)
-    private String gender;                 // "MALE" / "FEMALE" (enum is a later upgrade)
+    private Gender gender;                 // MALE / FEMALE / OTHER
 
     @Column(nullable = false, unique = true)
     private String passportNumber;
@@ -31,8 +32,8 @@ public class Patient {
     public void setPatientId(String patientId) { this.patientId = patientId; }
     public String getFullName() { return fullName; }
     public void setFullName(String fullName) { this.fullName = fullName; }
-    public String getGender() { return gender; }
-    public void setGender(String gender) { this.gender = gender; }
+    public Gender getGender() { return gender; }
+    public void setGender(Gender gender) { this.gender = gender; }
     public String getPassportNumber() { return passportNumber; }
     public void setPassportNumber(String passportNumber) { this.passportNumber = passportNumber; }
 }
