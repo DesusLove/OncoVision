@@ -30,3 +30,14 @@ target/
 *.iml
 .vscode/
 .DS_Store
+
+
+# Frontend build artifacts (Vite)
+node_modules/
+dist/
+
+# Local tooling state
+.openclaude/
+.kimchi/
+*.log
+frontend/node_modules/.vite/
