@@ -4,6 +4,19 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>OncoVision — Breast Cancer Detection & Patient Management</title>
+    <script>
+      // Apply theme to <html> BEFORE Vue mounts. The CSS variables for
+      // dark mode are scoped to the `.dark` class on <html>, so setting
+      // it here (instead of inside #app) ensures the page background
+      // also goes dark and prevents a flash of the light theme on load.
+      (function () {
+        try {
+          if (localStorage.getItem('oncovision-theme') === 'dark') {
+            document.documentElement.classList.add('dark');
+          }
+        } catch (e) { /* localStorage unavailable */ }
+      })();
+    </script>
   </head>
   <body>
     <div id="app"></div>

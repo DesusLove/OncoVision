@@ -9,42 +9,37 @@
  * Cancels the in-flight rAF on every props.to change so rapid updates
  * (e.g. a polling dashboard) don't pile up frames.
  */
-import { ref, watch, onUnmounted, h, defineComponent } from 'vue';
+import { ref, watch, onUnmounted } from 'vue';
 
-const AnimatedCount = defineComponent({
-  name: 'AnimatedCount',
-  props: { to: { type: Number, default: 0 }, duration: { type: Number, default: 800 } },
-  setup(props) {
-    const display = ref(0);
-    let raf = 0;
-    let cancelled = false;
+const props = defineProps({
+  to: { type: Number, default: 0 },
+  duration: { type: Number, default: 800 },
+});
 
-    const animate = () => {
-      if (cancelled) return;
-      const start = display.value;
-      const target = props.to;
-      const startTime = performance.now();
-      const step = (now) => {
-        if (cancelled) return;
-        const t = Math.min((now - startTime) / props.duration, 1);
-        const eased = 1 - Math.pow(1 - t, 3);
-        display.value = Math.round(start + (target - start) * eased);
-        if (t < 1) raf = requestAnimationFrame(step);
-      };
-      raf = requestAnimationFrame(step);
-    };
+const display = ref(0);
+let raf = 0;
+let cancelled = false;
 
-    watch(() => props.to, () => {
-      cancelAnimationFrame(raf);
-      animate();
-    }, { immediate: true });
+function animate() {
+  cancelAnimationFrame(raf);
+  if (cancelled) return;
+  const start = display.value;
+  const target = props.to;
+  const startTime = performance.now();
+  const step = (now) => {
+    if (cancelled) return;
+    const t = Math.min((now - startTime) / props.duration, 1);
+    const eased = 1 - Math.pow(1 - t, 3);
+    display.value = Math.round(start + (target - start) * eased);
+    if (t < 1) raf = requestAnimationFrame(step);
+  };
+  raf = requestAnimationFrame(step);
+}
 
-    onUnmounted(() => {
-      cancelled = true;
-      cancelAnimationFrame(raf);
-    });
+watch(() => props.to, () => animate(), { immediate: true });
 
-    return () => h('span', String(display.value));
-  },
+onUnmounted(() => {
+  cancelled = true;
+  cancelAnimationFrame(raf);
 });
 </script>

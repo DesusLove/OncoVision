@@ -1,5 +1,5 @@
 <template>
-  <div class="card pad" style="max-width: 800px;">
+  <div class="card pad">
     <h3 style="margin-bottom:14px">{{ t('dash_subtypes') }}</h3>
     <div v-if="loading" style="display:flex;gap:24px;align-items:center">
       <div class="skeleton" style="width:180px;height:180px;border-radius:50%"></div>

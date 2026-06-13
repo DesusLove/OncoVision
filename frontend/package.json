@@ -1,15 +1,20 @@
 {
   "dependencies": {
-    "vue-i18n": "^11.4.4"
+    "vue-i18n": "^11.4.4",
+    "vue-router": "^4.6.4"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.7",
-    "vite": "^8.0.16"
+    "@vue/test-utils": "^2.4.11",
+    "jsdom": "^29.1.1",
+    "vite": "^8.0.16",
+    "vitest": "^4.1.8"
   },
   "scripts": {
-  "dev": "vite --host",
-  "build": "vite build",
-  "preview": "vite preview"
+    "dev": "vite --host",
+    "build": "vite build",
+    "preview": "vite preview",
+    "test": "vitest run",
+    "test:watch": "vitest"
   }
-  
 }
