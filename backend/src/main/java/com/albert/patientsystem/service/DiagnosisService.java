@@ -90,7 +90,16 @@ public class DiagnosisService {
         }
     }
     public Page<DiagnosticRecord> searchRecords(String label, LocalDate from, LocalDate to, Pageable pageable) {
-        return recordRepo.filter(label, from, to, pageable);
+        // Accept null/blank from the controller as "no filter" — pass null
+        // straight through so the JPQL `:label IS NULL` branch fires. For
+        // a real value, convert the wire string to the enum the entity uses;
+        // any unrecognised value is treated as "no filter" rather than 500.
+        BinaryLabel labelEnum = null;
+        if (label != null && !label.isBlank()) {
+            try { labelEnum = BinaryLabel.fromWire(label.trim()); }
+            catch (IllegalArgumentException ignored) { labelEnum = null; }
+        }
+        return recordRepo.filter(labelEnum, from, to, pageable);
     }
 
 

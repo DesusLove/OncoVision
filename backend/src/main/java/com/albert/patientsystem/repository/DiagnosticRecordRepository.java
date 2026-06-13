@@ -25,7 +25,7 @@ public interface DiagnosticRecordRepository extends JpaRepository<DiagnosticReco
       AND (:from  IS NULL OR r.testDate >= :from)
       AND (:to    IS NULL OR r.testDate <= :to)
     """)
-    Page<DiagnosticRecord> filter(@Param("label") String label,
+    Page<DiagnosticRecord> filter(@Param("label") BinaryLabel label,
                                   @Param("from") LocalDate from,
                                   @Param("to") LocalDate to,
                                   Pageable pageable);
