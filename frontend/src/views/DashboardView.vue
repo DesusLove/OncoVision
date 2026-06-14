@@ -107,6 +107,8 @@
       />
     </div>
 
+    <TrendsChart :loading="trendsLoading" :trends="trends" :t="t" />
+
     <!-- [C] MODEL STRIP — single-row banner at the bottom of the page -->
     <div class="dash-model-strip">
       <span class="dash-model-strip__chip">AI Engine</span>
@@ -129,7 +131,7 @@
 </template>
 
 <script setup>
-import { computed } from 'vue';
+import { computed, ref, onMounted, watch } from 'vue';
 import AppCard from '../components/AppCard.vue';
 import AppBadge from '../components/AppBadge.vue';
 import AvatarInitials from '../components/AvatarInitials.vue';
@@ -137,6 +139,8 @@ import ConfidenceBar from '../components/ConfidenceBar.vue';
 import SkeletonLoader from '../components/SkeletonLoader.vue';
 import AnimatedCount from '../components/AnimatedCount.vue';
 import DonutChart from '../components/DonutChart.vue';
+import TrendsChart from '../components/TrendsChart.vue';
+import { apiCall } from '../composables/useApi.js';
 import { pretty } from '../composables/format.js';
 
 const props = defineProps({
@@ -148,6 +152,23 @@ const props = defineProps({
   t: { type: Function, required: true },
 });
 defineEmits(['view-record']);
+
+// === Trends (last 12 months of diagnosis volume) ===
+const trends = ref([]);
+const trendsLoading = ref(true);
+async function loadTrends() {
+  trendsLoading.value = true;
+  try {
+    const data = await apiCall('/api/stats/trends?months=12');
+    trends.value = Array.isArray(data) ? data : [];
+  } catch (e) {
+    trends.value = [];
+  } finally {
+    trendsLoading.value = false;
+  }
+}
+onMounted(() => { if (props.active) loadTrends(); });
+watch(() => props.active, (a) => { if (a) loadTrends(); });
 
 const cards = computed(() => [
   { label: props.t('stat_patients'),  raw: props.stats.totalPatients  ?? 0, icon: 'users',         cssClass: 'brand',  to: { name: 'patients' } },

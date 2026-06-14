@@ -50,6 +50,13 @@
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
             </svg>
           </button>
+          <button v-if="auth.isAuthenticated.value" class="nav__logout" :title="t('login_logout')" :aria-label="t('login_logout')" @click="onLogout">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
+              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
+              <polyline points="16 17 21 12 16 7"/>
+              <line x1="21" y1="12" x2="9" y2="12"/>
+            </svg>
+          </button>
           <div class="nav__lang">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
               <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/>
@@ -59,8 +66,8 @@
               <option value="zh">中文</option>
             </select>
           </div>
-          <button class="nav__avatar" aria-label="User menu" @click="onUserMenu">
-            <span>DK</span>
+          <button v-if="auth.isAuthenticated.value" class="nav__avatar" :title="auth.user.value?.displayName || auth.user.value?.username" @click="onUserMenu">
+            <span>{{ userInitials }}</span>
           </button>
         </div>
       </div>
@@ -163,6 +170,7 @@ import { useI18n } from './composables/useI18n.js';
 import { useToast } from './composables/useToast.js';
 import { useFocusTrapListener } from './composables/useFocusTrap.js';
 import { useMedicalData } from './composables/useMedicalData.js';
+import { useAuth } from './composables/useAuth.js';
 import { apiCall } from './composables/useApi.js';
 
 import DashboardView from './views/DashboardView.vue';
@@ -175,9 +183,21 @@ import PatientViewModal from './components/PatientViewModal.vue';
 import VerifyRecordModal from './components/VerifyRecordModal.vue';
 import AppToast from './components/AppToast.vue';
 
-// === i18n & toasts ===
+// === i18n & toasts & auth ===
 const { currentLang, t } = useI18n();
 const toast = useToast();
+const auth = useAuth();
+
+// Display initials for the navbar avatar button.
+const userInitials = computed(() => {
+  const u = auth.user.value;
+  if (!u) return '?';
+  const name = (u.displayName || u.username || '').trim();
+  if (!name) return '?';
+  const parts = name.split(/\s+/);
+  if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
+  return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+});
 
 // === Global UI state ===
 const router = useRouter();
@@ -339,6 +359,11 @@ function closeAllModals() { closeModal(); cancelDelete(); cancelVerify(); }
  */
 function onUserMenu() {
   toast.info('Profile & settings are coming soon.');
+}
+async function onLogout() {
+  await auth.logout();
+  toast.success(t('logout_success'));
+  router.push({ name: 'login' });
 }
 
 /**
@@ -792,6 +817,22 @@ onUnmounted(() => {
     transition: transform 150ms ease-out;
   }
   .nav__avatar:hover { transform: translateY(-1px); }
+
+  .nav__logout {
+    width: 32px;
+    height: 32px;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    transition: background 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
+  }
+  .nav__logout:hover { background: var(--color-malignant-soft); color: var(--color-malignant); border-color: var(--color-malignant-soft); }
+  .nav__logout:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
 
   .nav__hamburger {
     display: none;
