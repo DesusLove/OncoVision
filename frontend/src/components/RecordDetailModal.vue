@@ -112,14 +112,16 @@
 import AppBadge from './AppBadge.vue';
 import AvatarInitials from './AvatarInitials.vue';
 import ConfidenceBar from './ConfidenceBar.vue';
+import { useI18n } from '../composables/useI18n.js';
 import { pct, pretty } from '../composables/format.js';
 import { describeSubtype } from '../composables/subtypeDescriptions.js';
 
 const props = defineProps({
   record: { type: Object, required: true },
-  t: { type: Function, default: (k) => k },
 });
 defineEmits(['close']);
+
+const { t } = useI18n();
 
 function describe(wire) { return describeSubtype(wire); }
 

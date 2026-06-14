@@ -60,14 +60,12 @@ import { ref, onMounted, nextTick } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuth } from '../composables/useAuth.js';
 import { useToast } from '../composables/useToast.js';
-
-const props = defineProps({
-  t: { type: Function, required: true },
-});
+import { useI18n } from '../composables/useI18n.js';
 
 const router = useRouter();
 const auth = useAuth();
 const toast = useToast();
+const { t } = useI18n();
 
 const username = ref('');
 const password = ref('');
@@ -81,8 +79,9 @@ async function submit() {
   busy.value = true;
   try {
     await auth.login(username.value, password.value);
-    toast.success(props.t('login_success'));
-    router.push({ name: 'dashboard' });
+    toast.success(t('login_success'));
+    const redirect = router.currentRoute.value.query.redirect;
+    router.push(typeof redirect === 'string' ? redirect : { name: 'dashboard' });
   } catch (e) {
     error.value = e.message || 'Login failed';
     password.value = '';
@@ -95,7 +94,8 @@ async function submit() {
 onMounted(async () => {
   await auth.ensureLoaded();
   if (auth.isAuthenticated.value) {
-    router.push({ name: 'dashboard' });
+    const redirect = router.currentRoute.value.query.redirect;
+    router.push(typeof redirect === 'string' ? redirect : { name: 'dashboard' });
   } else {
     nextTick(() => usernameInput.value?.focus());
   }

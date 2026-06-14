@@ -89,7 +89,11 @@
       </div>
     </div>
 
-    <main>
+    <!-- Router outlet for routes that DON'T render inside the main app shell
+         (e.g. the login page, which needs its own full-screen layout). -->
+    <router-view v-if="activeTab === 'login'" />
+
+    <main v-else>
       <DashboardView :active="activeTab === 'dashboard'" :loading="statsLoading" :stats="statsData" :recent="recentRecords" :last-updated="lastUpdated" :t="t" @view-record="viewRecent" />
 
       <PatientsView

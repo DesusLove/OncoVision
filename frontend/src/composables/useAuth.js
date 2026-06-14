@@ -44,8 +44,8 @@ export function useAuth() {
             const res = await fetch('/api/auth/login', {
                 method: 'POST',
                 credentials: 'include',
-                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
-                body: new URLSearchParams({ username, password }).toString(),
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password }),
             });
             if (!res.ok) {
                 if (res.status === 401) throw new Error('Invalid username or password');
