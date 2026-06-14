@@ -1,77 +1,26 @@
 <template>
   <div class="app-shell">
-    <header class="nav">
-      <div class="nav__inner">
-        <RouterLink to="/dashboard" class="nav__brand" @click="mobileOpen = false">
-          <span class="nav__logo" aria-hidden="true">
-            <svg viewBox="0 0 32 34" fill="none" stroke="currentColor" stroke-width="3.1" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M16 5 C 11 10 11 17 16 20 C 21 23 21 28 18 31"/>
-              <path d="M16 5 C 21 10 21 17 16 20 C 11 23 11 28 14 31"/>
-            </svg>
-          </span>
-          <span class="nav__brand-text">
-            <span class="nav__brand-name">OncoVision</span>
-            <span class="nav__brand-tag">{{ t('tagline') }}</span>
-          </span>
-        </RouterLink>
-
-        <button class="nav__hamburger" @click="mobileOpen = !mobileOpen" :aria-label="mobileOpen ? 'Close menu' : 'Open menu'" :aria-expanded="mobileOpen">
-          <span></span><span></span><span></span>
-        </button>
-
-        <nav class="nav__links" :class="{ open: mobileOpen }">
-          <RouterLink to="/dashboard" class="nav__link" active-class="nav__link--active" @click="mobileOpen = false">{{ t('nav_dashboard') }}</RouterLink>
-          <RouterLink to="/patients"  class="nav__link" active-class="nav__link--active" @click="mobileOpen = false">
-            {{ t('nav_patients') }}
-            <span v-if="badges.patients" class="nav__badge">{{ badges.patients }}</span>
-          </RouterLink>
-          <RouterLink to="/diagnose"  class="nav__link" active-class="nav__link--active" @click="mobileOpen = false">{{ t('nav_diagnose') }}</RouterLink>
-          <RouterLink to="/records"   class="nav__link" active-class="nav__link--active" @click="mobileOpen = false">
-            {{ t('nav_records') }}
-            <span v-if="badges.records" class="nav__badge">{{ badges.records }}</span>
-          </RouterLink>
-        </nav>
-
-        <div class="nav__actions">
-          <span class="nav__kbd" aria-hidden="true">⌘K</span>
-          <button class="nav__theme" @click="toggleDark" :title="darkMode ? t('dm_light') : t('dm_dark')" :aria-label="darkMode ? t('dm_light') : t('dm_dark')">
-            <svg class="nav__theme-icon nav__theme-icon--sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <circle cx="12" cy="12" r="5"/>
-              <line x1="12" y1="1"  x2="12" y2="3"/>
-              <line x1="12" y1="21" x2="12" y2="23"/>
-              <line x1="4.22"  y1="4.22"  x2="5.64"  y2="5.64"/>
-              <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"/>
-              <line x1="1"  y1="12" x2="3"  y2="12"/>
-              <line x1="21" y1="12" x2="23" y2="12"/>
-              <line x1="4.22"  y1="19.78" x2="5.64"  y2="18.36"/>
-              <line x1="18.36" y1="5.64"  x2="19.78" y2="4.22"/>
-            </svg>
-            <svg class="nav__theme-icon nav__theme-icon--moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
-              <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-            </svg>
-          </button>
-          <button v-if="auth.isAuthenticated.value" class="nav__logout" :title="t('login_logout')" :aria-label="t('login_logout')" @click="onLogout">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="16" height="16" aria-hidden="true">
-              <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/>
-              <polyline points="16 17 21 12 16 7"/>
-              <line x1="21" y1="12" x2="9" y2="12"/>
-            </svg>
-          </button>
-          <div class="nav__lang">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true">
-              <circle cx="12" cy="12" r="9"/><path d="M3 12h18M12 3c2.5 2.7 2.5 15.3 0 18M12 3c-2.5 2.7-2.5 15.3 0 18"/>
-            </svg>
-            <select v-model="currentLang" aria-label="Language">
-              <option value="en">English</option>
-              <option value="zh">中文</option>
-            </select>
-          </div>
-          <button v-if="auth.isAuthenticated.value" class="nav__avatar" :title="auth.user.value?.displayName || auth.user.value?.username" @click="onUserMenu">
-            <span>{{ userInitials }}</span>
-          </button>
-        </div>
-      </div>
-    </header>
+    <!-- Login page renders its own minimal navbar (variant="landing")
+         inside the LoginView/LandingLogin component, so we skip the
+         full app navbar when on the login route. Without this guard,
+         both navbars stack on top of each other on /login. -->
+    <Navbar
+      v-if="activeTab !== 'login'"
+      variant="app"
+      :tagline="t('tagline')"
+      :mobile-open="mobileOpen"
+      :authenticated="auth.isAuthenticated.value"
+      :user-display-name="auth.user.value?.displayName || auth.user.value?.username || ''"
+      :user-initials="userInitials"
+      :current-lang="currentLang"
+      :badges="badges"
+      @toggle-mobile="mobileOpen = !mobileOpen"
+      @navigate="onNavLink"
+      @logout="onLogout"
+      @open-user-menu="onUserMenu"
+      @change-lang="(v) => currentLang = v"
+      @toggle-theme="toggleTheme"
+    />
 
     <div v-if="anyModal" class="overlay" @click.self="closeAllModals"></div>
 
@@ -169,12 +118,13 @@
  * or composable; this file should stay close to a layout component.
  */
 import { ref, reactive, computed, onMounted, onUnmounted, watch, nextTick } from 'vue';
-import { useRoute, useRouter, RouterLink } from 'vue-router';
+import { useRoute, useRouter } from 'vue-router';
 import { useI18n } from './composables/useI18n.js';
 import { useToast } from './composables/useToast.js';
 import { useFocusTrapListener } from './composables/useFocusTrap.js';
 import { useMedicalData } from './composables/useMedicalData.js';
 import { useAuth } from './composables/useAuth.js';
+import { useTheme } from './composables/useTheme.js';
 import { apiCall } from './composables/useApi.js';
 
 import DashboardView from './views/DashboardView.vue';
@@ -186,6 +136,7 @@ import DeleteConfirmModal from './components/DeleteConfirmModal.vue';
 import PatientViewModal from './components/PatientViewModal.vue';
 import VerifyRecordModal from './components/VerifyRecordModal.vue';
 import AppToast from './components/AppToast.vue';
+import Navbar from './components/Navbar.vue';
 
 // === i18n & toasts & auth ===
 const { currentLang, t } = useI18n();
@@ -210,7 +161,9 @@ const route = useRoute();
 // the single source of truth — back/forward, deep-links and stat-card
 // navigation all stay in sync without extra plumbing.
 const activeTab = computed(() => route.name || 'dashboard');
-const darkMode = ref(localStorage.getItem('oncovision-theme') === 'dark');
+// Theme state lives in the shared useTheme composable so the Navbar
+// toggle and the ⌘D command-palette shortcut stay in lockstep.
+const theme = useTheme();
 const mobileOpen = ref(false);
 const showPalette = ref(false);
 const paletteQuery = ref('');
@@ -253,7 +206,7 @@ const pageTitle = computed(() => {
 });
 
 const faviconData = computed(() => {
-  const c = darkMode.value ? '%23e2e8f0' : '%231f2937';
+  const c = theme.isDark.value ? '%23e2e8f0' : '%231f2937';
   return `data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 34" fill="none" stroke="${c}" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M16 5 C 11 10 11 17 16 20 C 21 23 21 28 18 31"/><path d="M16 5 C 21 10 21 17 16 20 C 11 23 11 28 14 31"/></svg>`;
 });
 
@@ -263,7 +216,7 @@ const paletteActions = computed(() => [
   { id: 'patients', label: t('nav_patients'), shortcut: '⌘2', action: () => switchTab('patients') },
   { id: 'diagnose', label: t('nav_diagnose'), shortcut: '⌘3', action: () => switchTab('diagnose') },
   { id: 'records', label: t('nav_records'), shortcut: '⌘4', action: () => switchTab('records') },
-  { id: 'dark', label: darkMode.value ? t('dm_light') : t('dm_dark'), shortcut: '⌘D', action: toggleDark },
+  { id: 'dark', label: theme.isDark.value ? t('dm_light') : t('dm_dark'), shortcut: '⌘D', action: toggleTheme },
 ]);
 const filteredActions = computed(() => {
   const q = paletteQuery.value.toLowerCase();
@@ -434,22 +387,12 @@ async function confirmVerify(correction) {
 // live in useMedicalData() — see the import at the top of this file.
 
 // === Theme ===
-// The `.dark` class is toggled on <html> so CSS variables cascade to
-// <body>. The inline script in index.html applies the initial value
-// before Vue mounts to prevent a flash of light theme on load.
-function applyTheme(v) {
-  if (v) document.documentElement.classList.add('dark');
-  else document.documentElement.classList.remove('dark');
-}
-function toggleDark() {
-  darkMode.value = !darkMode.value;
-  applyTheme(darkMode.value);
-  localStorage.setItem('oncovision-theme', darkMode.value ? 'dark' : 'light');
-}
-watch(darkMode, (v) => {
-  applyTheme(v);
-  localStorage.setItem('oncovision-theme', v ? 'dark' : 'light');
-});
+// Theme state is shared via useTheme(). The pre-mount boot script in
+// index.html applies the saved `.dark` class before Vue mounts, so
+// by the time the SPA starts we just need to keep the in-memory ref
+// in sync with whatever the user clicks.
+function toggleTheme() { theme.toggle(); }
+function onNavLink(name) { switchTab(name); }
 
 // === Page title + favicon ===
 watch(pageTitle, (title) => { document.title = title; }, { immediate: true });
@@ -484,7 +427,7 @@ function onKeyDown(e) {
     if (showPalette.value) { showPalette.value = false; return; }
   }
   if ((e.metaKey || e.ctrlKey) && e.key === 'k') { e.preventDefault(); showPalette.value = !showPalette.value; nextTick(() => paletteInput.value?.focus()); return; }
-  if ((e.metaKey || e.ctrlKey) && e.key === 'd') { e.preventDefault(); toggleDark(); return; }
+  if ((e.metaKey || e.ctrlKey) && e.key === 'd') { e.preventDefault(); toggleTheme(); return; }
   if ((e.metaKey || e.ctrlKey) && e.key === '1') { e.preventDefault(); router.push({ name: 'dashboard' }); return; }
   if ((e.metaKey || e.ctrlKey) && e.key === '2') { e.preventDefault(); router.push({ name: 'patients' }); return; }
   if ((e.metaKey || e.ctrlKey) && e.key === '3') { e.preventDefault(); router.push({ name: 'diagnose' }); return; }
@@ -493,7 +436,10 @@ function onKeyDown(e) {
 
 // === Init ===
 onMounted(() => {
-  applyTheme(darkMode.value);
+  // Sync theme state from the DOM in case it was toggled before this
+  // component mounted. The pre-mount boot script already applied the
+  // class, so this is just a safety re-read.
+  theme.syncFromDom();
   loadStats();
   window.addEventListener('keydown', onKeyDown);
   window.addEventListener('beforeprint', beforePrint);
@@ -639,245 +585,10 @@ onUnmounted(() => {
   .skeleton-row { height: 52px; margin-bottom: 4px; border-radius: 0; }
   @keyframes shimmer { 0% { background-position: -200% 0; } 100% { background-position: 200% 0; } }
 
-  /* === HEADER / NAVBAR === */
-  .nav {
-    height: 56px;
-    background: var(--bg-card);
-    border-bottom: 1px solid var(--border);
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    transition: background 150ms ease-out, border-color 150ms ease-out;
-  }
-  .nav__inner {
-    height: 100%;
-    max-width: 1200px;
-    margin: 0 auto;
-    padding: 0 20px;
-    display: flex;
-    align-items: center;
-    gap: 24px;
-  }
-  .nav__brand {
-    display: flex;
-    align-items: center;
-    gap: 10px;
-    text-decoration: none;
-    color: var(--text-primary);
-    flex-shrink: 0;
-  }
-  .nav__logo {
-    width: 32px;
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    color: var(--color-brand);
-    animation: heartbeat 3s ease-in-out infinite;
-  }
-  .nav__logo svg { width: 28px; height: 28px; }
-  @keyframes heartbeat {
-    0%, 100% { transform: scale(1); }
-    50%      { transform: scale(1.08); }
-  }
-  .nav__brand-text { display: flex; flex-direction: column; line-height: 1.2; }
-  .nav__brand-name {
-    font-size: 16px;
-    font-weight: 600;
-    letter-spacing: -0.01em;
-    color: var(--text-primary);
-  }
-  .nav__brand-tag {
-    font-size: 11px;
-    color: var(--text-muted);
-    margin-top: 1px;
-  }
-
-  /* Nav links — RouterLink with active-class. */
-  .nav__links {
-    display: flex;
-    gap: 4px;
-    margin-left: 24px;
-  }
-  .nav__link {
-    position: relative;
-    display: inline-flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px 14px;
-    color: var(--text-secondary);
-    text-decoration: none;
-    font-size: 14px;
-    font-weight: 500;
-    border-radius: var(--radius-sm);
-    transition: color 150ms ease-out, background 150ms ease-out;
-  }
-  .nav__link:hover { color: var(--text-primary); background: var(--bg-subtle); }
-  .nav__link--active {
-    color: var(--color-brand);
-  }
-  .nav__link--active::after {
-    content: '';
-    position: absolute;
-    left: 14px;
-    right: 14px;
-    bottom: -1px;
-    height: 2px;
-    background: var(--color-brand);
-    border-radius: 9999px;
-  }
-  .nav__badge {
-    background: var(--bg-subtle);
-    color: var(--text-secondary);
-    font-size: 11px;
-    padding: 1px 7px;
-    border-radius: 9999px;
-    font-weight: 600;
-    min-width: 20px;
-    text-align: center;
-  }
-  .nav__link--active .nav__badge { background: var(--color-brand-soft); color: var(--color-brand); }
-
-  .nav__actions {
-    margin-left: auto;
-    display: flex;
-    align-items: center;
-    gap: 8px;
-  }
-  .nav__kbd {
-    font-size: 11px;
-    color: var(--text-muted);
-    font-weight: 500;
-    padding: 3px 8px;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: var(--bg-subtle);
-    display: none;
-  }
-  @media (min-width: 900px) { .nav__kbd { display: inline-block; } }
-
-  .nav__theme {
-    width: 34px;
-    height: 34px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
-    transition: background 150ms ease-out, border-color 150ms ease-out, color 150ms ease-out;
-  }
-  .nav__theme:hover { background: var(--bg-subtle); border-color: var(--border-strong); color: var(--text-primary); }
-  .nav__theme-icon {
-    width: 16px;
-    height: 16px;
-    position: absolute;
-    transition: transform 200ms ease-out, opacity 200ms ease-out;
-  }
-  .nav__theme-icon--sun  { opacity: 1; transform: rotate(0deg) scale(1); }
-  .nav__theme-icon--moon { opacity: 0; transform: rotate(-180deg) scale(0.6); }
-  .dark .nav__theme-icon--sun  { opacity: 0; transform: rotate(180deg) scale(0.6); }
-  .dark .nav__theme-icon--moon { opacity: 1; transform: rotate(0deg) scale(1); }
-
-  .nav__lang {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    color: var(--text-muted);
-  }
-  .nav__lang svg { width: 15px; height: 15px; }
-  .nav__lang select {
-    background: transparent;
-    color: var(--text-primary);
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    padding: 6px 8px;
-    font: inherit;
-    font-size: 13px;
-    font-weight: 500;
-    cursor: pointer;
-    transition: border-color 150ms ease-out;
-  }
-  .nav__lang select:hover { border-color: var(--border-strong); }
-  .nav__lang select option { color: var(--text-primary); background: var(--bg-card); }
-
-  .nav__avatar {
-    width: 32px;
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 0;
-    border-radius: 9999px;
-    background: linear-gradient(135deg, var(--color-brand), var(--color-ai));
-    color: #fff;
-    font-size: 12px;
-    font-weight: 600;
-    cursor: pointer;
-    transition: transform 150ms ease-out;
-  }
-  .nav__avatar:hover { transform: translateY(-1px); }
-
-  .nav__logout {
-    width: 32px;
-    height: 32px;
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    border: 1px solid var(--border);
-    border-radius: var(--radius-sm);
-    background: transparent;
-    color: var(--text-secondary);
-    cursor: pointer;
-    transition: background 150ms ease-out, color 150ms ease-out, border-color 150ms ease-out;
-  }
-  .nav__logout:hover { background: var(--color-malignant-soft); color: var(--color-malignant); border-color: var(--color-malignant-soft); }
-  .nav__logout:focus-visible { outline: 2px solid var(--color-brand); outline-offset: 2px; }
-
-  .nav__hamburger {
-    display: none;
-    flex-direction: column;
-    gap: 5px;
-    background: none;
-    border: 0;
-    cursor: pointer;
-    padding: 6px;
-    color: var(--text-primary);
-  }
-  .nav__hamburger span {
-    display: block;
-    width: 22px;
-    height: 2px;
-    background: currentColor;
-    border-radius: 99px;
-    transition: 200ms ease-out;
-  }
-
-  @media (max-width: 768px) {
-    .nav__hamburger { display: flex; }
-    .nav__links {
-      display: none;
-      position: absolute;
-      top: 56px;
-      left: 0;
-      right: 0;
-      flex-direction: column;
-      background: var(--bg-card);
-      border-bottom: 1px solid var(--border);
-      padding: 8px 12px 12px;
-      gap: 2px;
-      margin-left: 0;
-      box-shadow: var(--shadow);
-    }
-    .nav__links.open { display: flex; }
-    .nav__link { padding: 10px 12px; width: 100%; }
-    .nav__link--active::after { display: none; }
-    .nav__kbd { display: none; }
-  }
+  /* The HEADER / NAVBAR styles now live in src/components/Navbar.vue
+     (scoped). Keeping the brand markup, theme toggle, and nav-link
+     active state in one place fixes the duplicate-logo / both-icons /
+     no-active-state bugs. */
 
   /* === MAIN === */
   main { max-width: 1200px; margin: 28px auto; padding: 0 26px; }
@@ -1214,7 +925,7 @@ onUnmounted(() => {
   @media print {
     /* Generated by beforeprint() in App.vue */
     .nav, .toolbar, .pager, .btn, .icon-btn,
-    .nav__hamburger, .nav__theme, .nav__lang, .nav__kbd, .nav__avatar { display: none !important; }
+    .nav-hamburger, .nav-theme, .nav-lang, .nav-kbd, .nav-avatar { display: none !important; }
     body { background: #ffffff; color: #000000; font-size: 12px; }
     .app-card, .card { box-shadow: none; border: 1px solid #ccc; break-inside: avoid; }
     .badge.solid.mal { background: var(--color-malignant); color: #ffffff; }
