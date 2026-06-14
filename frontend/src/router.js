@@ -5,7 +5,7 @@ import { createRouter, createWebHashHistory } from 'vue-router';
  * route is protected by the auth guard below.
  */
 const routes = [
-  { path: '/login', name: 'login', component: () => import('./views/LoginView.vue'), meta: { public: true } },
+  { path: '/login', name: 'login', component: () => import('./views/LandingLogin.vue'), meta: { public: true } },
   { path: '/', redirect: '/dashboard' },
   { path: '/dashboard', name: 'dashboard', component: () => import('./views/DashboardView.vue') },
   { path: '/patients',  name: 'patients',  component: () => import('./views/PatientsView.vue') },
