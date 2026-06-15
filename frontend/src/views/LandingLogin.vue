@@ -25,15 +25,15 @@
           <ul class="hero__badges" aria-label="Model highlights">
             <li class="hero__badge">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>95.5% {{ t('landing_stats_accuracy') }}</span>
+              <span>Binary classification</span>
             </li>
             <li class="hero__badge">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>100% {{ t('landing_stats_recall') }}</span>
+              <span>Malignant-recall optimized</span>
             </li>
             <li class="hero__badge">
               <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><polyline points="20 6 9 17 4 12"/></svg>
-              <span>8 {{ t('landing_feature_subtype_title').replace(/^\d+-/, '').replace(' Tumor Classification', '') }}</span>
+              <span>Subtype analysis pending</span>
             </li>
           </ul>
 
@@ -331,10 +331,10 @@ function onScroll() { scrolled.value = window.scrollY > 8; }
 // === Stats counter animation ===
 const statsBandRef = ref(null);
 const stats = [
-  { target: 7909, suffix: '',    labelKey: 'landing_stats_images',    format: 'int' },
-  { target: 82,   suffix: '',    labelKey: 'landing_stats_patients',  format: 'int' },
-  { target: 95.5, suffix: '%',   labelKey: 'landing_stats_accuracy',  format: 'pct1' },
-  { target: 100,  suffix: '%',   labelKey: 'landing_stats_recall',    format: 'int' },
+  { target: 0, suffix: '', labelKey: 'landing_stats_images',   format: 'int' },
+  { target: 0, suffix: '', labelKey: 'landing_stats_patients', format: 'int' },
+  { target: 0, suffix: '', labelKey: 'landing_stats_accuracy', format: 'pct1' },
+  { target: 0, suffix: '', labelKey: 'landing_stats_recall',   format: 'int' },
 ];
 const displayed = reactive([0, 0, 0, 0]);
 let countersStarted = false;
@@ -420,11 +420,11 @@ const perfCards = [
   {
     titleKey: 'landing_model_binary_title',
     badgeKey: 'landing_model_binary_badge',
-    barValue: 95.5,
+    barValue: 0,
     barVariant: 'benign',
     metrics: [
-      { labelKey: 'landing_model_binary_acc',    valueDisplay: '95.5%', valueClass: 'ben-color' },
-      { labelKey: 'landing_model_binary_recall', valueDisplay: '100%',  valueClass: 'ben-color' },
+      { labelKey: 'landing_model_binary_acc',    valueDisplay: '—',     valueClass: 'muted' },
+      { labelKey: 'landing_model_binary_recall', valueDisplay: '—',     valueClass: 'muted' },
       { labelKey: 'landing_model_binary_task',   valueDisplay: '',     valueClass: '', rawKey: 'landing_model_binary_task_val' },
       { labelKey: 'landing_model_binary_data',   valueDisplay: '',     valueClass: '', rawKey: 'landing_model_binary_data_val' },
     ],
@@ -432,11 +432,11 @@ const perfCards = [
   {
     titleKey: 'landing_model_subtype_title',
     badgeKey: 'landing_model_subtype_badge',
-    barValue: 90.6,
+    barValue: 0,
     barVariant: 'neutral',
     metrics: [
-      { labelKey: 'landing_model_subtype_acc',     valueDisplay: '90.6%', valueClass: 'brand-color' },
-      { labelKey: 'landing_model_subtype_f1',      valueDisplay: '88.2%', valueClass: 'brand-color' },
+      { labelKey: 'landing_model_subtype_acc',     valueDisplay: '—',      valueClass: 'muted' },
+      { labelKey: 'landing_model_subtype_f1',      valueDisplay: '—',      valueClass: 'muted' },
       { labelKey: 'landing_model_subtype_classes', valueDisplay: '',      valueClass: '', rawKey: 'landing_model_subtype_classes_val' },
       { labelKey: 'landing_model_subtype_data',    valueDisplay: '',      valueClass: '', rawKey: 'landing_model_subtype_data_val' },
     ],
@@ -1061,6 +1061,7 @@ onUnmounted(() => {
 .perf-metric__v { color: var(--text-primary); font-weight: 500; font-variant-numeric: tabular-nums; }
 .perf-metric__v.ben-color    { color: var(--color-benign); font-weight: 700; }
 .perf-metric__v.brand-color  { color: var(--color-brand);  font-weight: 700; }
+.perf-metric__v.muted       { color: var(--text-muted);   font-weight: 500; }
 .perf-card__bar { margin-top: 4px; }
 
 .warning-box {
