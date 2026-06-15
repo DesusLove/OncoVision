@@ -16,6 +16,7 @@ This service knows nothing about patients it only turns an image into numbers.
 
 import io
 import json
+import logging
 from pathlib import Path
 
 import torch
@@ -60,8 +61,20 @@ def load_bundle(weights_path: Path, meta_path: Path) -> dict:
 
 
 # Load BOTH models once at startup, not per request (loading is the slow part).
-binary_bundle  = load_bundle(BINARY_WEIGHTS, BINARY_META)
-subtype_bundle = load_bundle(SUBTYPE_WEIGHTS, SUBTYPE_META)
+# Load BINARY model at startup (must succeed — it's safety-critical).
+binary_bundle = load_bundle(BINARY_WEIGHTS, BINARY_META)
+
+# Load MULTICLASS model. If the checkpoint is corrupted/mismatched, degrade
+# gracefully so the service still starts and binary inference keeps working.
+try:
+    subtype_bundle = load_bundle(SUBTYPE_WEIGHTS, SUBTYPE_META)
+except Exception as exc:
+    logging.warning(
+        "Failed to load multiclass checkpoint %s: %s. "
+        "Multiclass inference will be disabled (subtype will be null).",
+        SUBTYPE_WEIGHTS, exc
+    )
+    subtype_bundle = None
 
 app = FastAPI(title="Breast Cancer Detection Service", version="1.0")
 
@@ -76,7 +89,11 @@ def infer(bundle: dict, image: Image.Image):
 
 @app.get("/health")
 def health():
-    return {"status": "ok", "device": str(DEVICE)}
+    return {
+        "status": "ok",
+        "device": str(DEVICE),
+        "subtype_loaded": subtype_bundle is not None,
+    }
 
 
 @app.post("/predict")
@@ -94,8 +111,15 @@ async def predict(file: UploadFile = File(...)):
     tau = float(binary_bundle["meta"].get("threshold", 0.5))   # recall-tuned cutoff
     binary_label = "malignant" if p_malignant >= tau else "benign"
 
-    s_probs, s_classes = infer(subtype_bundle, image)
-    s_idx = int(torch.argmax(s_probs))
+    if subtype_bundle is None:
+        subtype_result = None
+    else:
+        s_probs, s_classes = infer(subtype_bundle, image)
+        s_idx = int(torch.argmax(s_probs))
+        subtype_result = {
+            "label": s_classes[s_idx],
+            "confidence": round(float(s_probs[s_idx]), 4),
+        }
 
     return {
         "binary": {
@@ -103,8 +127,5 @@ async def predict(file: UploadFile = File(...)):
             "probability_malignant": round(p_malignant, 4),
             "threshold": tau,
         },
-        "subtype": {
-            "label": s_classes[s_idx],
-            "confidence": round(float(s_probs[s_idx]), 4),
-        },
+        "subtype": subtype_result,
     }
