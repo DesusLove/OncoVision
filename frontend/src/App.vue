@@ -472,6 +472,16 @@ onUnmounted(() => {
     --color-warning:      #D97706;
     --color-warning-soft: #FEF3C7;
 
+    /* Landing-page specific tokens (referenced by LandingLogin.vue
+       to keep its dark-mode overrides out of :global() selectors,
+       which Vue 3.5's scoped compiler mis-compiles). */
+    --landing-eyebrow-bg:     rgba(124, 58, 237, 0.10);
+    --landing-eyebrow-border: rgba(124, 58, 237, 0.25);
+    --landing-focus-ring:     rgba(26, 86, 219, 0.12);
+    --landing-warn-bg:        #FFFBEB;
+    --landing-warn-border:    #D97706;
+    --landing-warn-text:      #92400E;
+
     /* Surfaces */
     --bg-page:    #F0F4FA;
     --bg-card:    #FFFFFF;
@@ -540,6 +550,14 @@ onUnmounted(() => {
     --color-benign-soft:  rgba(52, 211, 153, 0.14);
     --color-warning:      #FBBF24;
     --color-warning-soft: rgba(251, 191, 36, 0.14);
+
+    /* Landing-page overrides for dark mode (see light tokens above). */
+    --landing-eyebrow-bg:     rgba(167, 139, 250, 0.14);
+    --landing-eyebrow-border: rgba(167, 139, 250, 0.30);
+    --landing-focus-ring:     rgba(59, 130, 246, 0.20);
+    --landing-warn-bg:        #2D2000;
+    --landing-warn-border:    #D97706;
+    --landing-warn-text:      #FCD34D;
 
     --bg-page:    #0D1117;
     --bg-card:    #161B22;

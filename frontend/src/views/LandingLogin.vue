@@ -552,14 +552,10 @@ onUnmounted(() => {
   letter-spacing: 0.04em;
   padding: 6px 12px;
   border-radius: 9999px;
-  background: rgba(124, 58, 237, 0.10);
+  background: var(--landing-eyebrow-bg);
   color: var(--color-ai);
-  border: 1px solid rgba(124, 58, 237, 0.25);
+  border: 1px solid var(--landing-eyebrow-border);
   margin-bottom: 20px;
-}
-:global(.dark) .hero__eyebrow {
-  background: rgba(167, 139, 250, 0.14);
-  border-color: rgba(167, 139, 250, 0.30);
 }
 
 .hero__headline {
@@ -727,10 +723,7 @@ onUnmounted(() => {
   outline: 0;
   border-color: var(--color-brand);
   background: var(--bg-card);
-  box-shadow: 0 0 0 3px rgba(26, 86, 219, 0.12);
-}
-:global(.dark) .field input:focus {
-  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.20);
+  box-shadow: 0 0 0 3px var(--landing-focus-ring);
 }
 .field input:disabled { opacity: 0.6; cursor: not-allowed; }
 
@@ -1071,8 +1064,8 @@ onUnmounted(() => {
 .perf-card__bar { margin-top: 4px; }
 
 .warning-box {
-  background: #FFFBEB;
-  border: 1px solid #D97706;
+  background: var(--landing-warn-bg);
+  border: 1px solid var(--landing-warn-border);
   border-radius: var(--radius-md);
   padding: 14px 16px;
   display: flex;
@@ -1082,15 +1075,10 @@ onUnmounted(() => {
 .warning-box__icon { font-size: 16px; line-height: 1.4; }
 .warning-box__text {
   font-size: 13px;
-  color: #92400E;
+  color: var(--landing-warn-text);
   line-height: 1.6;
   margin: 0;
 }
-:global(.dark) .warning-box {
-  background: #2D2000;
-  border-color: #D97706;
-}
-:global(.dark) .warning-box__text { color: #FCD34D; }
 
 /* =========================================================
    SECTION 07 — Footer
